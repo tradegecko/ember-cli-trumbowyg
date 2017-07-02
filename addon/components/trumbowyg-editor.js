@@ -50,20 +50,22 @@ export default Ember.Component.extend({
     this.$().trumbowyg('destroy');
   },
 
-  _isAttrChanged(attrs, attrName){
-    return Ember.get(attrs, `newAttrs.${attrName}.value`) !== Ember.get(attrs, `oldAttrs.${attrName}.value`);
+  _isAttrChanged(attrName){
+    return this.get(attrName) !== this.get(`_oldOptions.${attrName}`);
   },
 
   didInsertElement(){
     this._renderTrumbowyg();
   },
 
-  didUpdateAttrs(attrs) {
-    const optionsUpdated = this.get('optionNames')
-      .some(optionName => this._isAttrChanged(attrs, optionName));
-    const htmlUpdated = Ember.get(attrs, 'newAttrs.html.value') !== this.$().trumbowyg('html');
-    const disabledUpdated = this._isAttrChanged(attrs, 'disabled');
-    const placeholderUpdated = this._isAttrChanged(attrs, 'placeholder');
+  didUpdateAttrs() {
+    const options = this.getProperties(this.get('optionNames').concat(['disabled', 'placeholder']));
+
+    const optionsUpdated = this.get('optionNames').some(optionName => this._isAttrChanged(optionName));
+
+    const htmlUpdated = this.get('html') !== this.$().trumbowyg('html');
+    const disabledUpdated = this._isAttrChanged('disabled');
+    const placeholderUpdated = this._isAttrChanged('placeholder');
 
     if (optionsUpdated || placeholderUpdated) {
       this._destroyTrumbowyg();
@@ -77,6 +79,8 @@ export default Ember.Component.extend({
     if (disabledUpdated) {
       this._updateDisabled();
     }
+
+    this.set('_oldOptions', options);
   },
 
   willDestroyElement(){
